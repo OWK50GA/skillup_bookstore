@@ -1,6 +1,7 @@
 pub mod contracts {
     pub mod bookstore;
     pub mod student_locker;
+    pub mod token_sale;
 }
 
 pub mod components {
