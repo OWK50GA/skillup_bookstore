@@ -1,3 +1,5 @@
+use starknet::ContractAddress;
+
 #[derive(Copy, Drop, Serde, Default, PartialEq, starknet::Store)]
 pub struct Book {
     id: u8,
@@ -5,15 +7,19 @@ pub struct Book {
     author: felt252,
 }
 
+
 #[starknet::interface]
 pub trait IBookStore<TContractState> {
     fn add_book(ref self: TContractState, title: felt252, author: felt252);
     fn remove_book(ref self: TContractState, id: u8);
     fn borrow_book(ref self: TContractState, id: u8);
     fn return_book(ref self: TContractState, id: u8);
+    fn update_book_title(ref self: TContractState, id: u8, new_title: felt252);
+    fn transfer_book_ownership(ref self: TContractState, new_owner: ContractAddress);
     fn get_books(self: @TContractState) -> Array<Book>;
     // fn get_lent_books(self: @TContractState) -> Array<(ContractAddress, Book)>;
     fn get_book(self: @TContractState, id: u8) -> Book;
+    fn get_total_books(self: @TContractState) -> u8;
 }
 
 #[starknet::contract]
@@ -142,6 +148,28 @@ pub mod SkillupBookStore {
                 );
         }
 
+        //Update a book's title
+        fn update_book_title(ref self: ContractState, id: u8, new_title: felt252) {
+            assert(get_caller_address() == self.storekeeper.read(), 'Caller not permitted');
+
+            let mut existing_book = self.books.entry(id).read();
+            assert(existing_book != Default::default(), 'Book does not exist');
+
+            existing_book.title = new_title;
+            self.books.entry(id).write(existing_book);
+        }
+
+        
+
+        //Transfer store ownership to another address
+        fn transfer_book_ownership(ref self: ContractState, new_owner: ContractAddress) {
+            let caller = get_caller_address();
+            let current_owner = self.storekeeper.read();
+            assert(caller == current_owner, 'not_owner');
+
+            self.storekeeper.write(new_owner);
+        }
+
         fn get_books(self: @ContractState) -> Array<Book> {
             let mut all_books_array = array![];
             let book_counter = self.book_counter.read();
@@ -158,6 +186,13 @@ pub mod SkillupBookStore {
             let existing_book = self.books.entry(id).read();
             assert(existing_book != Default::default(), 'Book does not exist');
             existing_book
+        }
+
+        //total number of books ever added
+        fn get_total_books(self: @ContractState) -> u8 {
+            // Since counter starts from 1, subtract 1 to get actual count
+            let counter = self.book_counter.read();
+            counter - 1
         }
     }
 }

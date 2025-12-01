@@ -1,0 +1,5 @@
+### Contract Addres
+0x5ce6b270e65f644833a2393f8ae0caea91c593ec169b43965e04ab22d9c5fcb
+
+### Class Hash
+0x6ad6f200a48a7785ff1648bb6eee6ce8b8249f5e30a8492e58906a2309681be
